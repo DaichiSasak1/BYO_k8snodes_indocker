@@ -1,0 +1,2 @@
+FROM nginx:alpine
+RUN printf 'stream {\n\tinclude /etc/nginx/conf.d/*.conf.stream;\n}\n'  >> /etc/nginx/nginx.conf

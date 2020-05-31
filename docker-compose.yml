@@ -1,0 +1,122 @@
+version: "3.7"
+x-services:
+  &default-ctl
+    build:
+      context: ./build
+      dockerfile: Dockerfile_ctl
+    image: k8snodes-ctl:0.1
+    init: true
+    networks:
+      k8s:
+    volumes:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:rw"
+      - "./env/common/:/.env:ro"
+      - "./bin/ctl/exec:/exec:ro"
+      - "./bin/ctl/bin:/usr/local/bin:ro"
+      - "./lib/certs/ctl:/var/lib/kubernetes:ro"
+      - "./lib/certs/ca:/var/lib/ca:ro"
+      - "./lib/certs/ca_sec:/var/lib/ca_sec:ro"
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_CHROOT
+      - SETGID
+      - SETUID
+      - CHOWN
+      - NET_RAW
+      - DAC_OVERRIDE
+    env_file: ./env/env_ctl
+    dns_search:
+      - k8s
+
+x-services:
+  &default-worker
+    build:
+      context: ./build
+      dockerfile: Dockerfile_worker
+    image: k8snodes-worker:0.1
+    init: true
+    networks:
+      k8s:
+    volumes:
+      - "/lib/modules:/lib/modules:ro"
+      - "./env/common/:/.env:ro"
+      - "./bin/worker/exec:/exec:ro"
+      - "./bin/worker/bin:/usr/local/bin:ro"
+      - "./bin/worker/opt:/opt/cni/bin:ro"
+      - "./lib/worker/etccontainerd:/etc/containerd:ro"
+      - "./lib/worker/varcni:/var/cni:ro"
+      - "./lib/worker/kubelet:/var/lib/kubelet_config:ro"
+      - "./lib/worker/kube-proxy:/var/lib/kube-proxy_config:ro"
+      - "./lib/certs/worker/kubelet:/var/lib/kubelet_certs:ro"
+      - "./lib/certs/worker/kube-proxy:/var/lib/kube-proxy:ro"
+      - "./lib/certs/ca:/var/lib/ca:ro"
+      - type: tmpfs
+        target: /var/lib/containerd
+        tmpfs:
+          size: 300M
+    privileged: true
+    env_file: ./env/env_worker
+    dns_search:
+      - k8s
+
+x-services:
+  &default-balancer
+    build:
+      context: ./build
+      dockerfile: Dockerfile_lb
+    image: nginx_lb:alpine
+    ports:
+      - "10443:443"
+    volumes:
+      - "./lib/balancer:/etc/nginx/conf.d:ro"
+    networks:
+      k8s:
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+      - NET_BIND_SERVICE
+      - CHOWN
+      - SETGID
+      - SETUID
+  
+services:
+  balancer:
+    << : *default-balancer
+    container_name: balancer
+    hostname: balancer
+  ctl-0:
+    << : *default-ctl
+    container_name: ctl-0
+    hostname: ctl-0
+  ctl-1:
+    << : *default-ctl
+    container_name: ctl-1
+    hostname: ctl-1
+  ctl-2:
+    << : *default-ctl
+    container_name: ctl-2
+    hostname: ctl-2
+
+  worker-0:
+    << : *default-worker
+    container_name: worker-0
+    hostname: worker-0
+  worker-1:
+    << : *default-worker
+    container_name: worker-1
+    hostname: worker-1
+  worker-2:
+    << : *default-worker
+    container_name: worker-2
+    hostname: worker-2
+
+
+networks:
+  k8s:
+    name: k8s
+    ipam:
+      config:
+        - subnet: 172.16.10.0/24
+    

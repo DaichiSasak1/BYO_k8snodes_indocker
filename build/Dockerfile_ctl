@@ -1,0 +1,21 @@
+FROM alpine:3.11
+
+RUN apk --update --no-cache --no-progress add \
+		bash \
+		&& rm -rf /var/cache/apk/*
+
+#for ETCD runtime
+RUN mkdir -p /etc/etcd /var/lib/etcd 
+
+#for kubernetes control
+#such as api-server, conroller-manager, scheduler
+RUN mkdir -p /var/lib/kubernetes/
+
+#for HTTP health check(by nginx)
+# COPY nginx/kubernetes.default.svc.cluster.local /etc/nginx/sites-available/kubernetes.default.svc.cluster.local.conf
+# RUN ln -s /etc/nginx/sites-available/kubernetes.default.svc.cluster.local.conf /etc/nginx/conf.d/
+
+#
+COPY entrypoint.sh /
+CMD [ "/bin/sh", "/entrypoint.sh" ]
+

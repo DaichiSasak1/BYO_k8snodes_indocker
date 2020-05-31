@@ -1,0 +1,25 @@
+# FROM alpine:3.9
+FROM alpine:3.11
+
+RUN apk --update --no-cache --no-progress add \
+		bash \
+    socat ipset conntrack-tools \
+    libseccomp-dev libc6-compat \
+    iptables \
+    ca-certificates \
+		&& rm -rf /var/cache/apk/*
+
+
+# for provisioning worker node (kubelet, proxy)
+RUN mkdir -p /etc/cni/net.d \
+            /opt/cni/bin \
+            /var/lib/kubelet \
+            /var/lib/kube-proxy \
+            /var/lib/kubernetes \
+            /var/run/kubernetes
+
+#
+# ENV PATH ${C_HOME}/bin
+COPY entrypoint.sh /
+CMD [ "/bin/sh", "/entrypoint.sh" ]
+

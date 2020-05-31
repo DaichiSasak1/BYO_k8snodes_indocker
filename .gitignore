@@ -1,0 +1,27 @@
+# for myown
+env/*
+!env/common
+env/common/*
+tmp
+devel
+bin/worker/bin/*
+bin/worker/opt/*
+bin/worker/exec/*
+bin/ctl/bin/*
+bin/ctl/exec/*
+lib/ctl/*
+lib/worker/varcni/*
+lib/worker/etccontainerd/*
+lib/worker/kubelet/*
+lib/worker/kube-proxy/*
+lib/balancer/*
+lib/certs/ca/*
+lib/certs/ca_sec/*
+lib/certs/ctl/*
+lib/certs/worker/kubelet/*
+lib/certs/worker/kube-proxy/*
+cert_util/*
+!cert_util/config/
+cert_util/config/*
+utils/*
+!.gitkeep

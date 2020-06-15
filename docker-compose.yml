@@ -24,6 +24,7 @@ x-services:
       - SETUID
       - CHOWN
       - NET_RAW
+      - NET_ADMIN
       - DAC_OVERRIDE
     env_file: ./env/env_ctl
     dns_search:
@@ -47,6 +48,7 @@ x-services:
       - "./lib/worker/etccontainerd:/etc/containerd:ro"
       - "./lib/worker/varcni:/var/cni:ro"
       - "./lib/worker/kubelet:/var/lib/kubelet_config:ro"
+      - "./lib/worker/manifest:/var/lib/manifest:ro"
       - "./lib/worker/kube-proxy:/var/lib/kube-proxy_config:ro"
       - "./lib/certs/worker/kubelet:/var/lib/kubelet_certs:ro"
       - "./lib/certs/worker/kube-proxy:/var/lib/kube-proxy:ro"
@@ -54,7 +56,7 @@ x-services:
       - type: tmpfs
         target: /var/lib/containerd
         tmpfs:
-          size: 300M
+          size: 500M
     privileged: true
     env_file: ./env/env_worker
     dns_search:
@@ -86,31 +88,54 @@ services:
     << : *default-balancer
     container_name: balancer
     hostname: balancer
+    networks:
+      k8s:
+        ipv4_address: 172.16.10.10
   ctl-0:
     << : *default-ctl
     container_name: ctl-0
     hostname: ctl-0
+    command: /bin/bash /entrypoint.sh --api-verbose --quiet
+    networks:
+      k8s:
+        ipv4_address: 172.16.10.20
   ctl-1:
     << : *default-ctl
     container_name: ctl-1
     hostname: ctl-1
+    networks:
+      k8s:
+        ipv4_address: 172.16.10.21
   ctl-2:
     << : *default-ctl
     container_name: ctl-2
     hostname: ctl-2
+    networks:
+      k8s:
+        ipv4_address: 172.16.10.22
 
   worker-0:
     << : *default-worker
     container_name: worker-0
     hostname: worker-0
+    command: /bin/bash /entrypoint.sh --kubelet-verbose --quiet
+    networks:
+      k8s:
+        ipv4_address: 172.16.10.30
   worker-1:
     << : *default-worker
     container_name: worker-1
     hostname: worker-1
+    networks:
+      k8s:
+        ipv4_address: 172.16.10.31
   worker-2:
     << : *default-worker
     container_name: worker-2
     hostname: worker-2
+    networks:
+      k8s:
+        ipv4_address: 172.16.10.32
 
 
 networks:
@@ -119,4 +144,6 @@ networks:
     ipam:
       config:
         - subnet: 172.16.10.0/24
+    driver_opts:
+          com.docker.network.bridge.name: k8s_br
     

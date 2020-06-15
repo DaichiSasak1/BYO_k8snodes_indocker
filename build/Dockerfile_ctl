@@ -17,5 +17,5 @@ RUN mkdir -p /var/lib/kubernetes/
 
 #
 COPY entrypoint.sh /
-CMD [ "/bin/sh", "/entrypoint.sh" ]
+CMD [ "/bin/bash", "/entrypoint.sh", "--quiet" ]
 
